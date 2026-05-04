@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>오늘의 운세</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #0d0d2b 0%, #1a0a3d 50%, #0d1a3d 100%);
+      font-family: 'Noto Serif KR', 'Malgun Gothic', serif;
+      color: #e8e0ff;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 420px;
+      padding: 24px 16px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(180, 140, 255, 0.25);
+      border-radius: 20px;
+      padding: 36px 32px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 40px rgba(100, 60, 200, 0.3);
+      text-align: center;
+    }
+
+    .crystal-ball {
+      font-size: 52px;
+      margin-bottom: 8px;
+      filter: drop-shadow(0 0 12px rgba(180, 140, 255, 0.8));
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      color: #c9b8ff;
+      margin-bottom: 6px;
+    }
+
+    .today-date {
+      font-size: 13px;
+      color: rgba(200, 180, 255, 0.55);
+      letter-spacing: 2px;
+      margin-bottom: 28px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 14px 40px;
+      background: linear-gradient(135deg, #7b2ff7, #b44fff);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      font-size: 16px;
+      font-family: inherit;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 20px rgba(123, 47, 247, 0.5);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(123, 47, 247, 0.7);
+    }
+
+    .btn:active { transform: translateY(0); }
+
+    .result {
+      display: none;
+      animation: fadeIn 0.6s ease forwards;
+      margin-top: 28px;
+    }
+
+    .result.visible { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid rgba(180, 140, 255, 0.2);
+      margin: 20px 0;
+    }
+
+    .grade {
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      margin-bottom: 4px;
+    }
+
+    .grade-hanja {
+      font-size: 14px;
+      color: rgba(200, 180, 255, 0.6);
+      margin-bottom: 16px;
+    }
+
+    .grade-daeGil  { color: #ffd700; text-shadow: 0 0 18px rgba(255,215,0,0.7); }
+    .grade-gil     { color: #88e0a8; text-shadow: 0 0 18px rgba(136,224,168,0.6); }
+    .grade-soGil   { color: #7ecfff; text-shadow: 0 0 18px rgba(126,207,255,0.6); }
+    .grade-pyeong  { color: #c9b8ff; }
+    .grade-hyung   { color: #ff7f9e; text-shadow: 0 0 18px rgba(255,127,158,0.6); }
+
+    .message {
+      font-size: 14px;
+      line-height: 1.8;
+      color: rgba(220, 210, 255, 0.85);
+      margin-bottom: 20px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+
+    .categories {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .category-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255,255,255,0.04);
+      border-radius: 10px;
+      padding: 10px 16px;
+    }
+
+    .category-label {
+      font-size: 14px;
+      color: rgba(200, 180, 255, 0.75);
+      letter-spacing: 1px;
+    }
+
+    .stars {
+      font-size: 17px;
+      letter-spacing: 2px;
+    }
+
+    .star-on  { color: #ffc84a; }
+    .star-off { color: rgba(255,255,255,0.18); }
+
+    .lucky {
+      margin-top: 18px;
+      font-size: 13px;
+      color: rgba(180,160,255,0.55);
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <div class="crystal-ball">🔮</div>
+    <h1>오늘의 운세</h1>
+    <div class="today-date" id="today-date"></div>
+
+    <button class="btn" id="btn-fortune" onclick="reveal()">운세 보기</button>
+
+    <div class="result" id="result">
+      <hr class="divider">
+      <div class="grade" id="grade-text"></div>
+      <div class="grade-hanja" id="grade-hanja"></div>
+      <div class="message" id="message"></div>
+      <div class="categories" id="categories"></div>
+      <div class="lucky" id="lucky-number"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── 날짜 표시 ──────────────────────────────────────────
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm   = String(now.getMonth() + 1).padStart(2, '0');
+  const dd   = String(now.getDate()).padStart(2, '0');
+  document.getElementById('today-date').textContent = `${yyyy}.${mm}.${dd}`;
+
+  // ── 날짜 시드 기반 LCG 의사난수 생성기 ─────────────────
+  function makeLCG(seed) {
+    let s = seed;
+    return function () {
+      s = (s * 1664525 + 1013904223) & 0xffffffff;
+      return (s >>> 0) / 0xffffffff;
+    };
+  }
+
+  const seed = parseInt(`${yyyy}${mm}${dd}`);
+  const rand = makeLCG(seed);
+
+  // 0 이상 n 미만 정수
+  function randInt(n) { return Math.floor(rand() * n); }
+
+  // ── 운세 데이터 ─────────────────────────────────────────
+  const GRADES = [
+    { key: 'hyung',  label: '흉',   hanja: '凶',  cls: 'grade-hyung',  minAvg: 0,   maxAvg: 1.8 },
+    { key: 'pyeong', label: '평',   hanja: '平',  cls: 'grade-pyeong', minAvg: 1.8, maxAvg: 2.6 },
+    { key: 'soGil',  label: '소길', hanja: '小吉', cls: 'grade-soGil',  minAvg: 2.6, maxAvg: 3.4 },
+    { key: 'gil',    label: '길',   hanja: '吉',  cls: 'grade-gil',    minAvg: 3.4, maxAvg: 4.2 },
+    { key: 'daeGil', label: '대길', hanja: '大吉', cls: 'grade-daeGil', minAvg: 4.2, maxAvg: 6   },
+  ];
+
+  const MESSAGES = {
+    daeGil: [
+      '하늘이 돕는 날입니다. 오래 미뤄온 일을 과감히 시작해 보세요.',
+      '모든 기운이 당신을 향해 모이고 있습니다. 자신감을 가지세요.',
+      '귀인이 나타날 징조입니다. 새로운 만남에 마음을 열어두세요.',
+    ],
+    gil: [
+      '흐름이 좋습니다. 차분하게 나아가면 좋은 결실을 맺을 수 있습니다.',
+      '작은 노력이 큰 보람으로 돌아오는 날입니다. 꾸준함이 열쇠입니다.',
+      '주변의 도움을 받아들이면 일이 한결 수월해집니다.',
+    ],
+    soGil: [
+      '큰 욕심 없이 지금 할 수 있는 일에 집중하면 충분합니다.',
+      '서두르지 않아도 됩니다. 천천히 발걸음을 맞추어 가세요.',
+      '사소한 것들 속에서 소소한 기쁨을 발견할 수 있는 날입니다.',
+    ],
+    pyeong: [
+      '특별한 기복 없이 평온한 하루입니다. 루틴을 지키는 것이 최선입니다.',
+      '오늘은 새 일을 벌이기보다 마무리에 집중하는 것이 좋겠습니다.',
+      '무리하지 말고 충분한 휴식을 취하세요. 내일을 위한 준비입니다.',
+    ],
+    hyung: [
+      '오늘은 신중하게 행동하세요. 충동적인 결정은 삼가는 것이 좋습니다.',
+      '어려움이 있더라도 이 또한 지나갑니다. 인내심을 가지세요.',
+      '중요한 결정은 오늘 내리지 말고 잠시 보류하는 것이 현명합니다.',
+    ],
+  };
+
+  const CATEGORIES = ['재물운', '건강운', '애정운', '직업운'];
+
+  // ── 운세 생성 ───────────────────────────────────────────
+  function getGrade(avg) {
+    return GRADES.find(g => avg >= g.minAvg && avg < g.maxAvg) || GRADES[2];
+  }
+
+  function stars(score) {
+    return Array.from({ length: 5 }, (_, i) =>
+      `<span class="${i < score ? 'star-on' : 'star-off'}">${i < score ? '★' : '☆'}</span>`
+    ).join('');
+  }
+
+  function reveal() {
+    const scores = CATEGORIES.map(() => randInt(5) + 1);
+    const avg    = scores.reduce((a, b) => a + b, 0) / scores.length;
+    const grade  = getGrade(avg);
+
+    const msgs    = MESSAGES[grade.key];
+    const message = msgs[randInt(msgs.length)];
+    const lucky   = randInt(9) + 1;
+
+    document.getElementById('grade-text').textContent  = grade.label;
+    document.getElementById('grade-text').className    = `grade ${grade.cls}`;
+    document.getElementById('grade-hanja').textContent = `${grade.hanja}`;
+    document.getElementById('message').textContent     = message;
+
+    const catEl = document.getElementById('categories');
+    catEl.innerHTML = CATEGORIES.map((name, i) => `
+      <div class="category-row">
+        <span class="category-label">${name}</span>
+        <span class="stars">${stars(scores[i])}</span>
+      </div>
+    `).join('');
+
+    document.getElementById('lucky-number').textContent = `오늘의 행운 숫자: ${lucky}`;
+
+    const result = document.getElementById('result');
+    result.classList.remove('visible');
+    void result.offsetWidth; // reflow → 애니메이션 재실행
+    result.classList.add('visible');
+
+    document.getElementById('btn-fortune').textContent = '다시 보기';
+  }
+</script>
+</body>
+</html>
